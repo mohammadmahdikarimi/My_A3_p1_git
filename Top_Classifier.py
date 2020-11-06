@@ -1,4 +1,3 @@
-
 import os
 import numpy as np
 import torch
@@ -215,11 +214,3 @@ print(mAP_test)
 
 torch.save(classifier.state_dict(), '/results/voc_my_best_classifier.pth')
 output_submission_csv('/results/my_solution.csv', test_aps)
-
-
-
-
-
-
-
-
