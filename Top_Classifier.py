@@ -20,9 +20,9 @@ import tarfile
 #%load_ext autoreload
 #%autoreload 2
 
-num_epochs = 2
+num_epochs = 30
 test_frequency = 5
-batch_size = 128
+batch_size = 64
 
 
 print("===============Extract train====================")
@@ -182,7 +182,7 @@ def get_lr(optimizer):
 classifier = Classifier_maz().to(device)
 
 criterion = nn.MultiLabelSoftMarginLoss()
-optimizer = torch.optim.SGD(classifier.parameters(), lr=0.01, momentum=0.9, weight_decay = 0.9)
+optimizer = torch.optim.SGD(classifier.parameters(), lr=0.001, momentum=0.9, weight_decay = 0.9)
 #optimizer = torch.optim.Adam(classifier.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False)
 
 
