@@ -133,7 +133,6 @@ class Azin_Classifier(nn.Module):
 
 
 
-
 class Classifier(nn.Module):
     def __init__(self):
         #super() allows you to build classes that easily extend the functionality of previously built classes without implementing their functionality again.
@@ -149,7 +148,7 @@ class Classifier(nn.Module):
         self.ad_pool2 = nn.AdaptiveAvgPool2d(output_size=(7, 7))
         
         
-        self.fc1 = nn.Linear(in_features= 32768, out_features=1024, bias=True)
+        self.fc1 = nn.Linear(in_features= 25088, out_features=1024, bias=True)
         self.fc2 = nn.Linear(in_features=1024, out_features=200, bias=True)
         self.fc3 = nn.Linear(in_features=200, out_features=NUM_CLASSES, bias=True)
         self.drop = nn.Dropout(p=0.3, inplace=False)
@@ -157,40 +156,51 @@ class Classifier(nn.Module):
 
 
     def forward(self, x):
-        print("t1_n: ",x.size())
+    
+        #t1_n:  torch.Size([64, 3, 227, 227])
+        #t2:  torch.Size([64, 64, 74, 74])
+        #t3:  torch.Size([64, 128, 36, 36])
+        #t4:  torch.Size([64, 256, 17, 17])
+        #t5:  torch.Size([64, 512, 8, 8])
+        #t5_1:  torch.Size([64, 512, 7, 7])
+        #t6:  torch.Size([64, 25088])
+        #t7:  torch.Size([64, 1024])
+        #t8:  torch.Size([64, 200])
+        
+        #print("t1_n: ",x.size())
         #
         x = F.relu(self.conv1(x))
-        print("t2: ",x.size())
+        #print("t2: ",x.size())
         
         x = self.pool2(F.relu(self.conv2(x)))
-        print("t3: ",x.size())
+        #print("t3: ",x.size())
         
         res = x        
         x = self.pool2(F.relu(self.conv3(x)))
-        print("t4: ",x.size())
+        #print("t4: ",x.size())
         
         x = self.pool2(F.relu(self.conv4(x)))
         #x += res
         #plt.imshow(x[0].cpu().numpy())
-        print("t5: ",x.size())
+        #print("t5: ",x.size())
         
         x = self.ad_pool2(x)
         
-        print("t5_1: ",x.size())
+        #print("t5_1: ",x.size())
         
-        x = x.view(x.size()[0], 32768)
+        x = x.view(x.size()[0], 25088)
         
-        print("t6: ",x.size())
+        #print("t6: ",x.size())
         
         x = self.drop(x)
         x = F.relu(self.fc1(x))
         
-        print("t7: ",x.size())
+        #print("t7: ",x.size())
         
         x = self.drop(x)
         x = F.relu(self.fc2(x))
         
-        print("t8: ",x.size())
+        #print("t8: ",x.size())
         
         x = self.fc3(x)
         return x
