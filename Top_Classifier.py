@@ -179,7 +179,9 @@ def get_lr(optimizer):
         return param_group['lr']
 
 # TODO: Run your own classifier here
-classifier = Classifier_maz().to(device)
+#classifier = Classifier_maz().to(device)
+classifier = Classifier().to(device)
+
 
 criterion = nn.MultiLabelSoftMarginLoss()
 optimizer = torch.optim.SGD(classifier.parameters(), lr=0.001, momentum=0.9, weight_decay = 0.9)
