@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from kaggle_submission import output_submission_csv
 from classifier import SimpleClassifier, Classifier#, AlexNet
 from voc_dataloader import VocDataset, VOC_CLASSES
-
+import shutil 
 import simplejson       #save list to files
 import csv
 import tarfile
