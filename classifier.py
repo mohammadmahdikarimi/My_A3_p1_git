@@ -145,10 +145,14 @@ class Classifier(nn.Module):
         
         self.pool3 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
         self.pool2 = nn.MaxPool2d(kernel_size=2, stride=1, padding=0, dilation=1, ceil_mode=False)
-        self.fc1 = nn.Linear(in_features= 2048, out_features=2048, bias=True)
-        self.fc2 = nn.Linear(in_features=2048, out_features=200, bias=True)
+        
+        self.ad_pool2 = nn.AdaptiveAvgPool2d(output_size=(7, 7))
+        
+        
+        self.fc1 = nn.Linear(in_features= 32768, out_features=1024, bias=True)
+        self.fc2 = nn.Linear(in_features=1024, out_features=200, bias=True)
         self.fc3 = nn.Linear(in_features=200, out_features=NUM_CLASSES, bias=True)
-        self.drop = nn.Dropout(p=0.5, inplace=False)
+        self.drop = nn.Dropout(p=0.3, inplace=False)
         print('My_Classifier')
 
 
@@ -170,19 +174,11 @@ class Classifier(nn.Module):
         #plt.imshow(x[0].cpu().numpy())
         print("t5: ",x.size())
         
-        #x = F.relu(self.conv3(x))
-        #print("t6: ",x.size())
+        x = self.ad_pool2(x)
         
-        #x = F.relu(self.conv5(x))
-        #print("t7: ",x.size())
+        print("t5_1: ",x.size())
         
-        #x = F.relu(self.conv6(x))
-        #print("t8: ",x.size())
-        
-        #x = F.relu(self.conv4(x))
-        #print("t9: ",x.size())
-
-        x = x.view(x.size()[0], 2048)
+        x = x.view(x.size()[0], 32768)
         
         print("t6: ",x.size())
         
