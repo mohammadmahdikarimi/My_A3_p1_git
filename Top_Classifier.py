@@ -9,7 +9,7 @@ from sklearn.metrics import average_precision_score
 from PIL import Image, ImageDraw
 import matplotlib.pyplot as plt
 from kaggle_submission import output_submission_csv
-from classifier import SimpleClassifier, Classifier#, AlexNet
+from classifier import SimpleClassifier, Classifier, Classifier_maz#, AlexNet
 from voc_dataloader import VocDataset, VOC_CLASSES
 import shutil 
 import simplejson       #save list to files
