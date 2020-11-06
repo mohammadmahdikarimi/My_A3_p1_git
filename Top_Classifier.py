@@ -14,6 +14,7 @@ from voc_dataloader import VocDataset, VOC_CLASSES
 
 import simplejson       #save list to files
 import csv
+import tarfile
 
 #%matplotlib inline
 #%load_ext autoreload
