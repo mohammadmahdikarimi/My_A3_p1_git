@@ -20,9 +20,9 @@ import tarfile
 #%load_ext autoreload
 #%autoreload 2
 
-num_epochs = 30
+num_epochs = 100
 test_frequency = 5
-batch_size = 64
+batch_size = 128
 
 
 print("===============Extract train====================")
