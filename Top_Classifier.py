@@ -24,7 +24,7 @@ import tarfile
 num_epochs = 100
 test_frequency = 5
 batch_size = 128
-opt_sel = "ADAM"
+opt_sel = "SGD"
 
 
 print("===============Extract train====================")
