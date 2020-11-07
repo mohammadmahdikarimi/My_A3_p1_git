@@ -191,14 +191,12 @@ def get_lr(optimizer):
 criterion = nn.MultiLabelSoftMarginLoss()
 #optimizer = torch.optim.SGD(classifier.parameters(), lr=0.001, momentum=0.9, weight_decay = 0.9)
 
-#optimizer = torch.optim.SGD(classifier.parameters(), lr=0.01, momentum=0.9)
-
-#optimizer = torch.optim.Adam(classifier.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False)
+optimizer = torch.optim.SGD(classifier.parameters(), lr=0.01, momentum=0.9)
 
 
-decayRate = 1
+decayRate = 0.97
 lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=decayRate)
-optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-4)
+# optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-4)
 
 #classifier, train_losses, val_losses, train_mAPs, val_mAPs = train(classifier, num_epochs, train_loader, val_loader, criterion, optimizer, test_frequency)
 
