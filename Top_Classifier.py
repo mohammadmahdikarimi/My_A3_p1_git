@@ -24,6 +24,7 @@ import tarfile
 num_epochs = 100
 test_frequency = 5
 batch_size = 128
+opt_sel = "ADAM"
 
 
 print("===============Extract train====================")
@@ -191,11 +192,15 @@ def get_lr(optimizer):
 criterion = nn.MultiLabelSoftMarginLoss()
 #optimizer = torch.optim.SGD(classifier.parameters(), lr=0.001, momentum=0.9, weight_decay = 0.9)
 
-optimizer = torch.optim.SGD(classifier.parameters(), lr=0.01, momentum=0.9)
-
-
-decayRate = 0.97
+if opt_sel == "SGD":
+    optimizer = torch.optim.SGD(classifier.parameters(), lr=0.01, momentum=0.9)
+    decayRate = 0.97
+elif opt_sel == "ADAM":
+    optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-4)
+    decayRate = 1
+    
 lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=decayRate)
+
 # optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-4)
 
 #classifier, train_losses, val_losses, train_mAPs, val_mAPs = train(classifier, num_epochs, train_loader, val_loader, criterion, optimizer, test_frequency)
