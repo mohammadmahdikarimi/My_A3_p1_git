@@ -17,31 +17,18 @@ import simplejson       #save list to files
 import csv
 import tarfile
 
+from pprint import pprint
+import sys
+import argparse
+import time
+
 #%matplotlib inline
 #%load_ext autoreload
 #%autoreload 2
 
-num_epochs = 100
-test_frequency = 5
-batch_size = 128
-opt_sel = "SGD"
 
 
-print("===============Extract train====================")
-tar = tarfile.open("/MMK_data/pascal_data/VOCtrainval_06-Nov-2007.tar")
-tar.extractall("/raid/pascal_data/")
-print("===============Move train====================")
-shutil.move("/raid/pascal_data/VOCdevkit/", "/raid/pascal_data/VOCdevkit_2007")
 
-print("===============Extract test====================")
-tar = tarfile.open("/MMK_data/pascal_data/VOCtest_06-Nov-2007.tar")
-tar.extractall("/raid/pascal_data/")
-
-shutil.move("/raid/pascal_data/VOCdevkit/VOC2007", "/raid/pascal_data/VOCdevkit_2007/VOC2007test")
-print("===============Done with Dataset====================")
-
-
-  
 
 
 def train_classifier(train_loader, classifier, criterion, optimizer):
@@ -135,101 +122,138 @@ def train(classifier, num_epochs, train_loader, val_loader, criterion, optimizer
     
     return classifier, train_losses, val_losses, train_mAPs, val_mAPs
     
-    
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std= [0.229, 0.224, 0.225])
-
-train_transform = transforms.Compose([
-            torchvision.transforms.ColorJitter(hue=.05, saturation=.05),
-            torchvision.transforms.RandomHorizontalFlip(),
-            torchvision.transforms.RandomRotation(20, resample=PIL.Image.BILINEAR),                       
-            transforms.Resize(227),
-            transforms.CenterCrop(227),
-            transforms.ToTensor(),
-            normalize
-        ])
-
-test_transform = transforms.Compose([
-            transforms.Resize(227),
-            transforms.CenterCrop(227),
-            transforms.ToTensor(),
-            normalize,
-        ])
-
-ds_train = VocDataset('/raid/pascal_data/VOCdevkit_2007/VOC2007/','train',train_transform)
-ds_val = VocDataset('/raid/pascal_data/VOCdevkit_2007/VOC2007/','val',test_transform)
-ds_test = VocDataset('/raid/pascal_data/VOCdevkit_2007/VOC2007test/','test', test_transform)
-
-
-train_loader = torch.utils.data.DataLoader(dataset=ds_train,
-                                               batch_size=batch_size, 
-                                               shuffle=True,
-                                               num_workers=1)
-
-val_loader = torch.utils.data.DataLoader(dataset=ds_val,
-                                               batch_size=batch_size, 
-                                               shuffle=True,
-                                               num_workers=1)
-
-test_loader = torch.utils.data.DataLoader(dataset=ds_test,
-                                               batch_size=batch_size, 
-                                               shuffle=False,
-                                               num_workers=1)
-
-
-classifier = Classifier_moreConv().to(device)
 def get_lr(optimizer):
     for param_group in optimizer.param_groups:
         return param_group['lr']
 
-# TODO: Run your own classifier here
-#classifier = Classifier_maz().to(device)
-#classifier = Classifier().to(device)
 
+if __name__ == "__main__":
+    #Print the start time of the script
+    pprint("Start Time %s" % time.strftime('%x %X'))
 
-criterion = nn.MultiLabelSoftMarginLoss()
-#optimizer = torch.optim.SGD(classifier.parameters(), lr=0.001, momentum=0.9, weight_decay = 0.9)
-
-if opt_sel == "SGD":
-    optimizer = torch.optim.SGD(classifier.parameters(), lr=0.01, momentum=0.9)
-    decayRate = 0.97
-elif opt_sel == "ADAM":
-    optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-4)
-    decayRate = 1
+    #Instantiate parser object to parse the input parameters
+    parser = argparse.ArgumentParser(description="Load action files and call appropriate JAMA actions")
+    parser.add_argument("-e", "--epoch", default=50, help="Neural network training epoch")
+    parser.add_argument("-t", "--test_freq", default=5, help="Testing Frequency")
+    parser.add_argument("-b", "--b_size", default=256, help="Batch size for training ML")
+    parser.add_argument("-o", "--optimizer", default="ADAM", help="Optimizer; SGD or ADAM")
+    args = parser.parse_args()
     
-lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=decayRate)
+    num_epochs = args.epoch
+    test_frequency = args.test_freq
+    batch_size = args.b_size
+    opt_sel = args.optimizer
 
-# optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-4)
+    print("===============Extract train====================")
+    tar = tarfile.open("/MMK_data/pascal_data/VOCtrainval_06-Nov-2007.tar")
+    tar.extractall("/raid/pascal_data/")
+    print("===============Move train====================")
+    shutil.move("/raid/pascal_data/VOCdevkit/", "/raid/pascal_data/VOCdevkit_2007")
 
-#classifier, train_losses, val_losses, train_mAPs, val_mAPs = train(classifier, num_epochs, train_loader, val_loader, criterion, optimizer, test_frequency)
+    print("===============Extract test====================")
+    tar = tarfile.open("/MMK_data/pascal_data/VOCtest_06-Nov-2007.tar")
+    tar.extractall("/raid/pascal_data/")
 
-classifier, train_losses, val_losses, train_mAPs, val_mAPs = train(classifier, num_epochs, train_loader, val_loader, criterion, optimizer,lr_scheduler, test_frequency)       
-
-
-f = open('/results/train_losses.txt', 'w')
-simplejson.dump(train_losses, f)
-f.close()
-f = open('/results/val_losses.txt', 'w')
-simplejson.dump(val_losses, f)
-f.close()
-f = open('/results/train_mAPs.txt', 'w')
-simplejson.dump(train_mAPs, f)
-f.close()
-f = open('/results/val_mAPs.txt', 'w')
-simplejson.dump(val_mAPs, f)
-f.close()
+    shutil.move("/raid/pascal_data/VOCdevkit/VOC2007", "/raid/pascal_data/VOCdevkit_2007/VOC2007test")
+    print("===============Done with Dataset====================")
 
 
-plot_losses(train_losses, val_losses, test_frequency, num_epochs)
-plot_mAP(train_mAPs, val_mAPs, test_frequency, num_epochs)
+      
 
-mAP_test, test_loss, test_aps = test_classifier(test_loader, classifier, criterion)
-print("MAP for test is :" , mAP_test)
+      
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-f = open('/results/mAP_test.txt', 'w')
-simplejson.dump(mAP_test, f)
-f.close()
-torch.save(classifier.state_dict(), '/results/voc_my_best_classifier.pth')
-output_submission_csv('/results/my_solution.csv', test_aps)
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                         std= [0.229, 0.224, 0.225])
+
+    train_transform = transforms.Compose([
+                torchvision.transforms.ColorJitter(hue=.05, saturation=.05),
+                torchvision.transforms.RandomHorizontalFlip(),
+                torchvision.transforms.RandomRotation(20, resample=PIL.Image.BILINEAR),                       
+                transforms.Resize(227),
+                transforms.CenterCrop(227),
+                transforms.ToTensor(),
+                normalize
+            ])
+
+    test_transform = transforms.Compose([
+                transforms.Resize(227),
+                transforms.CenterCrop(227),
+                transforms.ToTensor(),
+                normalize,
+            ])
+
+    ds_train = VocDataset('/raid/pascal_data/VOCdevkit_2007/VOC2007/','train',train_transform)
+    ds_val = VocDataset('/raid/pascal_data/VOCdevkit_2007/VOC2007/','val',test_transform)
+    ds_test = VocDataset('/raid/pascal_data/VOCdevkit_2007/VOC2007test/','test', test_transform)
+
+
+    train_loader = torch.utils.data.DataLoader(dataset=ds_train,
+                                                   batch_size=batch_size, 
+                                                   shuffle=True,
+                                                   num_workers=1)
+
+    val_loader = torch.utils.data.DataLoader(dataset=ds_val,
+                                                   batch_size=batch_size, 
+                                                   shuffle=True,
+                                                   num_workers=1)
+
+    test_loader = torch.utils.data.DataLoader(dataset=ds_test,
+                                                   batch_size=batch_size, 
+                                                   shuffle=False,
+                                                   num_workers=1)
+
+
+    classifier = Classifier_moreConv().to(device)
+
+
+    # TODO: Run your own classifier here
+    #classifier = Classifier_maz().to(device)
+    #classifier = Classifier().to(device)
+
+
+    criterion = nn.MultiLabelSoftMarginLoss()
+    #optimizer = torch.optim.SGD(classifier.parameters(), lr=0.001, momentum=0.9, weight_decay = 0.9)
+
+    if opt_sel == "SGD":
+        optimizer = torch.optim.SGD(classifier.parameters(), lr=0.01, momentum=0.9)
+        decayRate = 0.97
+    elif opt_sel == "ADAM":
+        optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-4)
+        decayRate = 1
+        
+    lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=decayRate)
+
+    # optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-4)
+
+    #classifier, train_losses, val_losses, train_mAPs, val_mAPs = train(classifier, num_epochs, train_loader, val_loader, criterion, optimizer, test_frequency)
+
+    classifier, train_losses, val_losses, train_mAPs, val_mAPs = train(classifier, num_epochs, train_loader, val_loader, criterion, optimizer,lr_scheduler, test_frequency)       
+
+
+    f = open('/results/train_losses.txt', 'w')
+    simplejson.dump(train_losses, f)
+    f.close()
+    f = open('/results/val_losses.txt', 'w')
+    simplejson.dump(val_losses, f)
+    f.close()
+    f = open('/results/train_mAPs.txt', 'w')
+    simplejson.dump(train_mAPs, f)
+    f.close()
+    f = open('/results/val_mAPs.txt', 'w')
+    simplejson.dump(val_mAPs, f)
+    f.close()
+
+
+    plot_losses(train_losses, val_losses, test_frequency, num_epochs)
+    plot_mAP(train_mAPs, val_mAPs, test_frequency, num_epochs)
+
+    mAP_test, test_loss, test_aps = test_classifier(test_loader, classifier, criterion)
+    print("MAP for test is :" , mAP_test)
+
+    f = open('/results/mAP_test.txt', 'w')
+    simplejson.dump(mAP_test, f)
+    f.close()
+    torch.save(classifier.state_dict(), '/results/voc_my_best_classifier.pth')
+    output_submission_csv('/results/my_solution.csv', test_aps)
