@@ -7,9 +7,10 @@ import torchvision
 from torchvision import transforms
 from sklearn.metrics import average_precision_score
 from PIL import Image, ImageDraw
+import PIL
 import matplotlib.pyplot as plt
 from kaggle_submission import output_submission_csv
-from classifier import SimpleClassifier, Classifier, Classifier_maz#, AlexNet
+from classifier import SimpleClassifier, Classifier, Classifier_maz, Classifier_moreConv#, AlexNet
 from voc_dataloader import VocDataset, VOC_CLASSES
 import shutil 
 import simplejson       #save list to files
@@ -106,20 +107,20 @@ def plot_mAP(train, val, test_frequency, num_epochs):
     plt.show()
     
 
-def train(classifier, num_epochs, train_loader, val_loader, criterion, optimizer, test_frequency=5):
+def train(classifier, num_epochs, train_loader, val_loader, criterion, optimizer, lr_scheduler, test_frequency=5):
     train_losses = []
     train_mAPs = []
     val_losses = []
     val_mAPs = []
-    decayRate = 0.96
+    #decayRate = 0.96
     
 
     for epoch in range(1,num_epochs+1):
         print("Starting epoch number " + str(epoch))
         train_loss = train_classifier(train_loader, classifier, criterion, optimizer)
         train_losses.append(train_loss)
-        #lr_scheduler.step()
-        #print('learning rate :', get_lr(lr_scheduler.optimizer))
+        lr_scheduler.step()
+        print('learning rate :', get_lr(lr_scheduler.optimizer))
 
         print("Loss for Training on Epoch " +str(epoch) + " is "+ str(train_loss))
         if(epoch%test_frequency==0 or epoch==1):
@@ -140,6 +141,9 @@ normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std= [0.229, 0.224, 0.225])
 
 train_transform = transforms.Compose([
+            torchvision.transforms.ColorJitter(hue=.05, saturation=.05),
+            torchvision.transforms.RandomHorizontalFlip(),
+            torchvision.transforms.RandomRotation(20, resample=PIL.Image.BILINEAR),                       
             transforms.Resize(227),
             transforms.CenterCrop(227),
             transforms.ToTensor(),
@@ -174,25 +178,30 @@ test_loader = torch.utils.data.DataLoader(dataset=ds_test,
                                                num_workers=1)
 
 
+classifier = Classifier_moreConv().to(device)
 def get_lr(optimizer):
     for param_group in optimizer.param_groups:
         return param_group['lr']
 
 # TODO: Run your own classifier here
 #classifier = Classifier_maz().to(device)
-classifier = Classifier().to(device)
+#classifier = Classifier().to(device)
 
 
 criterion = nn.MultiLabelSoftMarginLoss()
-optimizer = torch.optim.SGD(classifier.parameters(), lr=0.001, momentum=0.9, weight_decay = 0.9)
+#optimizer = torch.optim.SGD(classifier.parameters(), lr=0.001, momentum=0.9, weight_decay = 0.9)
+
+optimizer = torch.optim.SGD(classifier.parameters(), lr=0.01, momentum=0.9)
+
 #optimizer = torch.optim.Adam(classifier.parameters(), lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False)
 
 
-#decayRate = 0.97
-#lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=decayRate)
+decayRate = 0.97
+lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma=decayRate)
 # optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-4)
 
-classifier, train_losses, val_losses, train_mAPs, val_mAPs = train(classifier, num_epochs, train_loader, val_loader, criterion, optimizer, test_frequency)
+#classifier, train_losses, val_losses, train_mAPs, val_mAPs = train(classifier, num_epochs, train_loader, val_loader, criterion, optimizer, test_frequency)
+                                                                                    classifier, train_losses, val_losses, train_mAPs, val_mAPs = train(classifier, num_epochs, train_loader, val_loader, criterion, optimizer,lr_scheduler, test_frequency)       
 
 
 f = open('/results/train_losses.txt', 'w')
@@ -213,7 +222,10 @@ plot_losses(train_losses, val_losses, test_frequency, num_epochs)
 plot_mAP(train_mAPs, val_mAPs, test_frequency, num_epochs)
 
 mAP_test, test_loss, test_aps = test_classifier(test_loader, classifier, criterion)
-print(mAP_test)
+print("MAP for test is :" , mAP_test)
 
+f = open('/results/mAP_test.txt', 'w')
+simplejson.dump(mAP_test, f)
+f.close()
 torch.save(classifier.state_dict(), '/results/voc_my_best_classifier.pth')
 output_submission_csv('/results/my_solution.csv', test_aps)
