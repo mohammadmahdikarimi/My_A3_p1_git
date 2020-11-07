@@ -132,6 +132,63 @@ class Azin_Classifier(nn.Module):
         return x
 
 
+class Classifier(nn.Module):
+    def __init__(self):
+        #super() allows you to build classes that easily extend the functionality of previously built classes without implementing their functionality again.
+        super(Classifier, self).__init__()
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=(11, 11), stride=(3, 3), padding=(2, 2)) #74
+        self.conv2 = nn.Conv2d(64, 192, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2)) #36
+        self.conv3 = nn.Conv2d(192, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)) #19
+        self.conv4 = nn.Conv2d(64, 32, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)) #10
+        
+        self.pool3 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
+        self.pool2 = nn.MaxPool2d(kernel_size=2, stride=1, padding=0, dilation=1, ceil_mode=False)
+        self.fc1 = nn.Linear(in_features= 2048, out_features=2048, bias=True)
+        self.fc2 = nn.Linear(in_features=2048, out_features=200, bias=True)
+        self.fc3 = nn.Linear(in_features=200, out_features=NUM_CLASSES, bias=True)
+        self.drop = nn.Dropout(p=0.5, inplace=False)
+        print('My_Classifier')
+
+
+    def forward(self, x):
+        #print("t1_n: ",x.size())
+        #
+        x = F.relu(self.conv1(x))
+        #print("t2: ",x.size())
+        
+        x = self.pool2(F.relu(self.conv2(x)))
+        #print("t3: ",x.size())
+        
+        res = x        
+        x = self.pool2(F.relu(self.conv3(x)))
+        #print("t4: ",x.size())
+        
+        x = self.pool2(F.relu(self.conv4(x)))
+        #x += res
+        #plt.imshow(x[0].cpu().numpy())
+        #print("t5: ",x.size())
+        
+        #x = F.relu(self.conv3(x))
+        #print("t6: ",x.size())
+        
+        #x = F.relu(self.conv5(x))
+        #print("t7: ",x.size())
+        
+        #x = F.relu(self.conv6(x))
+        #print("t8: ",x.size())
+        
+        #x = F.relu(self.conv4(x))
+        #print("t9: ",x.size())
+
+        x = x.view(x.size()[0], 2048)
+        x = self.drop(x)
+        x = F.relu(self.fc1(x))
+        x = self.drop(x)
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+        
+
 
 class Classifier_moreConv(nn.Module):
     def __init__(self):
