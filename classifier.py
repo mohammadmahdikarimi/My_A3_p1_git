@@ -133,10 +133,10 @@ class Azin_Classifier(nn.Module):
 
 
 
-class Classifier(nn.Module):
+class Classifier_moreConv(nn.Module):
     def __init__(self):
         #super() allows you to build classes that easily extend the functionality of previously built classes without implementing their functionality again.
-        super(Classifier, self).__init__()
+        super(Classifier_moreConv, self).__init__()
         self.conv1 = nn.Conv2d(3, 64, kernel_size=(11, 11), stride=(3, 3), padding=(2, 2)) #74
         self.conv2 = nn.Conv2d(64, 128, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2)) #36
         self.conv3 = nn.Conv2d(128, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)) #19
