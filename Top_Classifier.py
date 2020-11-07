@@ -201,7 +201,8 @@ lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=optimizer, gamma
 # optimizer = torch.optim.Adam(classifier.parameters(), lr=1e-4)
 
 #classifier, train_losses, val_losses, train_mAPs, val_mAPs = train(classifier, num_epochs, train_loader, val_loader, criterion, optimizer, test_frequency)
-                                                                                    classifier, train_losses, val_losses, train_mAPs, val_mAPs = train(classifier, num_epochs, train_loader, val_loader, criterion, optimizer,lr_scheduler, test_frequency)       
+
+classifier, train_losses, val_losses, train_mAPs, val_mAPs = train(classifier, num_epochs, train_loader, val_loader, criterion, optimizer,lr_scheduler, test_frequency)       
 
 
 f = open('/results/train_losses.txt', 'w')
